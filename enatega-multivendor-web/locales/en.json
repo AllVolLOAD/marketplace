@@ -1,4 +1,4 @@
-{
+﻿{
   "selectCity": "Select your country",
   "searchCity": "Search for a city...",
   "gifts": "GIFTS.",
@@ -427,7 +427,7 @@
   "please_enter_valid_otp_message": "Please enter a valid OTP",
   "verify_your_mobile_number_label": "Verify your Phone number",
   "otp_valid_for_10_minutes_label": "Valid for 10 minutes",
-  "your@email.com": "your@email.com",
+  "your_email_com": "your_email_com",
 
   "continue_label": "Continue",
   "resend_otp_label": "Resend OTP",
@@ -676,7 +676,7 @@
   "The_minimum_amount_of_(": "The minimum amount of (",
   ")_for_your_order_has_not_been_reached": ") for your order has not been reached.",
   "missing_address": "Missing Address",
-  "Select_your_address.": "Select your address.",
+  "Select_your_address": "Select your address.",
 
   "DeliveryTime": "Delivery Time",
   "SalesTax": "Sales Tax",
@@ -964,3 +964,4 @@
   "loading_orders": "Loading orders",
   "show_more_orders": "Show more orders"
 }
+

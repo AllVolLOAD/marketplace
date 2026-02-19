@@ -18,24 +18,6 @@ const AppFooter = () => {
     title: t("Footer.partnerWithEnatega"),
     links: [
       { label: t("Footer.home"), link: "/", internal: true },
-      { label: t("Footer.forRiders"), link: "/rider", internal: true },
-      { label: t("Footer.forRestaurants"), link: "/restaurantInfo", internal: true },
-    ],
-  };
-
-  const products = {
-    title: t("Footer.products"),
-    links: [
-      {
-        label: t("Footer.enategaRider"),
-        link: "https://play.google.com/store/apps/details?id=com.enatega.multirider&hl=en",
-        internal: false,
-      },
-      {
-        label: t("Footer.enategaRestaurant"),
-        link: "https://play.google.com/store/apps/details?id=multivendor.enatega.restaurant&hl=en",
-        internal: false,
-      },
     ],
   };
 
@@ -78,15 +60,12 @@ const AppFooter = () => {
         }`}
     >
       <div className="mx-auto my-[30px] md:mt-[60px] md:mb-[60px] p-4 flex md:items-center md:justify-center flex-col">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 w-screen md:w-full md:px-0 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-screen md:w-full md:px-0 px-4">
           <div className="p-2">
             <AppLinks />
           </div>
           <div className="p-2">
             <FooterLinks section={partnerWithEnatega} />
-          </div>
-          <div className="p-2">
-            <FooterLinks section={products} />
           </div>
           <div className="p-2">
             <FooterLinks section={usefulLinks} />

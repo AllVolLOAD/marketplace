@@ -461,39 +461,43 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
-  return (
-    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID ?? "not_found"}>
-      <AuthContext.Provider
-        value={{
-          authToken,
-          setAuthToken,
-          user,
-          setUser,
-          checkEmailExists,
-          checkPhoneExists,
-          handleUserLogin,
-          activePanel,
-          setActivePanel,
-          isAuthModalVisible,
-          setIsAuthModalVisible,
-          otp,
-          setOtp,
-          sendOtpToEmailAddress,
-          sendOtpToPhoneNumber,
-          handleCreateUser,
-          setIsLoading,
-          isLoading,
-          isRegistering,
-          setIsRegistering,
-          refetchProfileData,
-          setRefetchProfileData,
-          handlePasswordReset,
-        }}
-      >
-        {children}
-      </AuthContext.Provider>
-    </GoogleOAuthProvider>
+  const provider = (
+    <AuthContext.Provider
+      value={{
+        authToken,
+        setAuthToken,
+        user,
+        setUser,
+        checkEmailExists,
+        checkPhoneExists,
+        handleUserLogin,
+        activePanel,
+        setActivePanel,
+        isAuthModalVisible,
+        setIsAuthModalVisible,
+        otp,
+        setOtp,
+        sendOtpToEmailAddress,
+        sendOtpToPhoneNumber,
+        handleCreateUser,
+        setIsLoading,
+        isLoading,
+        isRegistering,
+        setIsRegistering,
+        refetchProfileData,
+        setRefetchProfileData,
+        handlePasswordReset,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
+
+  if (!GOOGLE_CLIENT_ID) {
+    return provider;
+  }
+
+  return <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>{provider}</GoogleOAuthProvider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

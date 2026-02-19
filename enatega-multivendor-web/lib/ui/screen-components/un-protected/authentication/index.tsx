@@ -35,6 +35,66 @@ import VerificationEmailForChangePassword from "./change-password/email-otp";
 import { Tooltip } from "react-tooltip";
 import { useTranslations } from "next-intl";
 
+function GoogleLoginPanel({
+  handleChangePanel,
+  handleFormChange,
+  formData,
+}: {
+  handleChangePanel: (index: number) => void;
+  handleFormChange: (name: string, value: string) => void;
+  formData: IAuthFormData;
+}) {
+  const { handleUserLogin, setUser, setIsAuthModalVisible, setIsLoading } =
+    useAuth();
+  const { SKIP_EMAIL_VERIFICATION, SKIP_MOBILE_VERIFICATION } = useConfig();
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      const userInfo = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } },
+      );
+      const userData = await userInfo.json();
+
+      const userLoginResponse = await handleUserLogin({
+        type: "google",
+        email: userData.email,
+        name: userData.name,
+        notificationToken: "",
+      });
+
+      if (userLoginResponse) {
+        setUser(userLoginResponse.login as ILoginProfile);
+        if (!userLoginResponse.login.emailIsVerified && SKIP_EMAIL_VERIFICATION) {
+          handleChangePanel(5);
+        } else if (
+          !userLoginResponse.login.phoneIsVerified &&
+          !SKIP_MOBILE_VERIFICATION
+        ) {
+          handleChangePanel(4);
+        } else {
+          handleChangePanel(0);
+          setIsAuthModalVisible(false);
+        }
+        setIsLoading(false);
+      }
+    },
+    onError: (errorResponse) => {
+      console.log(errorResponse);
+    },
+  });
+
+  return (
+    <LoginWithGoogle
+      googleLogin={googleLogin}
+      handleChangePanel={handleChangePanel}
+      handleFormChange={handleFormChange}
+      formData={formData}
+    />
+  );
+}
+
 export default function AuthModal({
   isAuthModalVisible,
   handleModalToggle,
@@ -59,74 +119,26 @@ export default function AuthModal({
       });
     }
   }, [isAuthModalVisible]);
-  // get the RTL direction
-  const direction = document.documentElement.getAttribute("dir") || "ltr";
+  // get the RTL direction (client-only)
+  const [direction, setDirection] = useState("ltr");
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setDirection(document.documentElement.getAttribute("dir") || "ltr");
+    }
+  }, []);
 
   // Refs
   const authenticationPanelRef = useRef(null);
 
   // Hooks
   const {
-    handleUserLogin,
     activePanel,
     setActivePanel,
-    setUser,
-    setIsAuthModalVisible,
-    setIsLoading,
     sendOtpToEmailAddress,
   } = useAuth();
   const { showToast } = useToast();
   const t = useTranslations();
-  const { SKIP_EMAIL_VERIFICATION, SKIP_MOBILE_VERIFICATION } = useConfig();
-
-  // Login With Google
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
-      const userInfo = await fetch(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
-      );
-      const userData = await userInfo.json();
-
-      const userLoginResponse = await handleUserLogin({
-        type: "google",
-        email: userData.email,
-        name: userData.name,
-        notificationToken: "",
-      });
-
-      if (userLoginResponse) {
-        setUser(userLoginResponse.login as ILoginProfile);
-        if (
-          !userLoginResponse.login.emailIsVerified &&
-          SKIP_EMAIL_VERIFICATION
-        ) {
-          setActivePanel(5);
-        } else if (
-          !userLoginResponse.login.phoneIsVerified &&
-          !SKIP_MOBILE_VERIFICATION
-        ) {
-          setActivePanel(4);
-        } else {
-          setActivePanel(0);
-          setIsAuthModalVisible(false);
-
-          // showToast({
-          //   type: "success",
-          //   title: t("login_success"),
-          //   message: t("login_success_message"),
-          // });
-        }
-        setIsLoading(false);
-        console.log("userLoginResponse", userLoginResponse);
-      }
-    },
-
-    onError: (errorResponse) => {
-      console.log(errorResponse);
-    },
-  });
+  const { GOOGLE_CLIENT_ID } = useConfig();
 
   // Handlers
   const handleChangePanel = (index: number) => {
@@ -194,14 +206,15 @@ export default function AuthModal({
       </button>
 
       <Stepper ref={authenticationPanelRef} activeStep={activePanel}>
-        <StepperPanel>
-          <LoginWithGoogle
-            googleLogin={googleLogin}
-            handleChangePanel={handleChangePanel}
-            handleFormChange={handleFormChange}
-            formData={formData}
-          />
-        </StepperPanel>
+        {GOOGLE_CLIENT_ID ? (
+          <StepperPanel>
+            <GoogleLoginPanel
+              handleChangePanel={handleChangePanel}
+              handleFormChange={handleFormChange}
+              formData={formData}
+            />
+          </StepperPanel>
+        ) : null}
 
         <StepperPanel>
           <LoginWithEmail

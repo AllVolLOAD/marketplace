@@ -47,11 +47,6 @@ export default async function RootLayout({
             `,
           }}
         />
-        <Script
-          src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
-          strategy="beforeInteractive"
-        />
-
         {/* Microsoft Clarity */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`

@@ -28,9 +28,6 @@ import { FontawesomeConfig } from "@/lib/config";
 import { LocationProvider } from "@/lib/context/Location/Location.context";
 import { UserAddressProvider } from "@/lib/context/address/address.context";
 import { SearchUIProvider } from "@/lib/context/search/search.context";
-import NotificationInitializer from "../NotificationInitialzer";
-import FirebaseForegroundHandler from "@/lib/config/FirebaseForegroundHandler";
-import { useEffect,useRef } from "react";
 
 export default function RootLayout({
   children,
@@ -81,25 +78,6 @@ export default function RootLayout({
   //   }
   // }, []); // ✅ Runs only once on mount
 
-  const hasRegistered = useRef(false); // ✅ Persist across renders
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        if (hasRegistered.current) return; // ✅ Prevent duplicate registration
-        hasRegistered.current = true;
-
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then((registration) => {
-            console.log("✅ Service Worker registered:", registration.scope);
-            return registration.update()
-          })
-          .catch((error) => {
-            console.error("❌ SW registration failed:", error);
-          });
-      });
-    }
-  }, []);
 
   // if ('serviceWorker' in navigator) {
   //   navigator.serviceWorker.register('/sw.js')
@@ -128,11 +106,7 @@ export default function RootLayout({
                     <LocationProvider>
                       <UserAddressProvider>
                         <SearchUIProvider>
-                          <AppLayout>
-                            <NotificationInitializer/>
-                            <FirebaseForegroundHandler/>
-                            {children}
-                            </AppLayout>
+                          <AppLayout>{children}</AppLayout>
                         </SearchUIProvider>
                       </UserAddressProvider>
                     </LocationProvider>

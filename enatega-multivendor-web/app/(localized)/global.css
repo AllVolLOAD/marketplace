@@ -883,14 +883,6 @@ Discovery Caurousal
   text-shadow: 6px 6px 10px rgba(0, 0, 0, 0.5);
 }
 
-.react-chat-elements-message-box .message-box-tail {
-  display: none !important;
-}
-
-.rce-mbox-right-notch , .rce-mbox-left-notch{
-  display: none;
-}
-
 .p-dialog-content{
   padding-left: 0;
   padding-right: 0;

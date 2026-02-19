@@ -1,309 +1,169 @@
 "use client";
 
-// Components
-import { PaddingContainer } from "@/lib/ui/useable-components/containers";
-import GoogleMapTrackingComponent from "@/lib/ui/screen-components/protected/order-tracking/components/gm-tracking-comp";
-import TrackingOrderDetails from "../../../../screen-components/protected/order-tracking/components/tracking-order-details";
-import TrackingHelpCard from "../../../../screen-components/protected/order-tracking/components/tracking-help-card";
-import TrackingStatusCard from "@/lib/ui/screen-components/protected/order-tracking/components/tracking-status-card";
-import TrackingOrderDetailsDummy from "../../../../screen-components/protected/order-tracking/components/tracking-order-details-dummy";
+import { useContext, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 
-// Services
-import useLocation from "@/lib/ui/screen-components/protected/order-tracking/services/useLocation";
-import useTracking from "@/lib/ui/screen-components/protected/order-tracking/services/useTracking";
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "@apollo/client";
-import { ADD_REVIEW_ORDER, GET_USER_PROFILE } from "@/lib/api/graphql";
-import useReviews from "@/lib/hooks/useReviews";
-import { IReview } from "@/lib/utils/interfaces";
-import useToast from "@/lib/hooks/useToast";
-import { RatingModal } from "@/lib/ui/screen-components/protected/profile";
-import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
-import ReactConfetti from "react-confetti";
-import ChatRider from "@/lib/ui/screen-components/protected/order-tracking/components/ChatRider";
+import { PaddingContainer } from "@/lib/ui/useable-components/containers";
+import { GoogleMapsContext } from "@/lib/context/global/google-maps.context";
+import { useUserAddress } from "@/lib/context/address/address.context";
+import { useConfig } from "@/lib/context/configuration/configuration.context";
 
 interface IOrderTrackingScreenProps {
   orderId: string;
 }
 
+type Stage = {
+  key: string;
+  label: string;
+  position: { lat: number; lng: number };
+};
+
+const DEFAULT_CENTER = { lat: 40.7128, lng: -74.006 };
+
+function buildStages(destination: { lat: number; lng: number }): Stage[] {
+  return [
+    {
+      key: "created",
+      label: "Order placed",
+      position: { lat: destination.lat + 0.04, lng: destination.lng - 0.02 },
+    },
+    {
+      key: "warehouse",
+      label: "Warehouse processed",
+      position: { lat: destination.lat + 0.03, lng: destination.lng - 0.01 },
+    },
+    {
+      key: "carrier_hub",
+      label: "Carrier hub",
+      position: { lat: destination.lat + 0.02, lng: destination.lng },
+    },
+    {
+      key: "out_for_delivery",
+      label: "Out for delivery",
+      position: { lat: destination.lat + 0.01, lng: destination.lng + 0.01 },
+    },
+    {
+      key: "delivered",
+      label: "Delivered",
+      position: destination,
+    },
+  ];
+}
+
 export default function OrderTrackingScreen({
   orderId,
 }: IOrderTrackingScreenProps) {
-  //states
-  const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showChat, setShowChat] = useState(false)
+  const { isLoaded } = useContext(GoogleMapsContext);
+  const { GOOGLE_MAPS_KEY } = useConfig();
+  const searchParams = useSearchParams();
+  const { userAddress } = useUserAddress();
 
-  //Queries and Mutations
-  const {
-    isLoaded,
-    origin,
-    destination,
-    directions,
-    setDirections,
-    directionsCallback,
-    store_user_location_cache_key,
-    isCheckingCache,
-    setIsCheckingCache,
-  } = useLocation();
-  const {
-    orderTrackingDetails,
-    isOrderTrackingDetailsLoading,
-    subscriptionData,
-  } = useTracking({ orderId: orderId });
-
-
-
-  const { showToast } = useToast();
-
-  const { data: profile } = useQuery(GET_USER_PROFILE, {
-    fetchPolicy: "cache-only",
-  });
-
-  const [mutate] = useMutation(ADD_REVIEW_ORDER, {
-    onCompleted,
-    onError,
-  });
-
-  function onCompleted() {
-    showToast({
-      type: "success",
-      title: "Rating",
-      message: "Rating submitted successfully",
-      duration: 3000,
-    });
-
-
-    // Add a small delay before navigation
-    // Use window.location for a hard redirect
-    setTimeout(() => {
-      window.location.href = "/profile/order-history";
-    }, 1000); // Increased timeout to ensure toast has time to display
-  }
-
-  function onError() {
-    showToast({
-      type: "error",
-      title: "Rating",
-      message: "Failed to submit rating",
-      duration: 3000,
-    });
-  }
-  // Merge subscription data with order tracking details
-  let mergedOrderDetails =
-    orderTrackingDetails && subscriptionData ?
-      {
-        ...orderTrackingDetails,
-        orderStatus:
-          subscriptionData.orderStatus || orderTrackingDetails.orderStatus,
-        rider: subscriptionData.rider || orderTrackingDetails.rider,
-        completionTime:
-          subscriptionData.completionTime ||
-          orderTrackingDetails.completionTime,
-      }
-      : orderTrackingDetails;
-
-  if (mergedOrderDetails?.orderStatus === "PICKUP") {
-    mergedOrderDetails = {
-      ...mergedOrderDetails,
-      orderStatus: "PICKED",
-    };
-  }
-
-  // Get restaurant ID for reviews query
-  const restaurantId = useMemo(
-    () => mergedOrderDetails?.restaurant?._id,
-    [mergedOrderDetails?.restaurant?._id]
-  );
-
-  // Fetch reviews data for the specified restaurant
-  const { data: reviewsData, refetch } = useReviews(restaurantId);
-
-  // Check if the user has already reviewed the order
-  // Memoize the check for existing user review
-  const hasUserReview = useMemo(() => {
-    if (
-      !reviewsData?.reviewsByRestaurant?.reviews ||
-      !profile?.profile?.email
-    ) {
-      return false;
+  const destination = useMemo(() => {
+    const coords = userAddress?.location?.coordinates;
+    if (coords?.length === 2) {
+      return { lat: Number(coords[1]), lng: Number(coords[0]) };
     }
-    return reviewsData.reviewsByRestaurant.reviews.some(
-      (review: IReview) =>
-        review?.order?.user?.email === profile.profile.email &&
-        review?.order?._id === orderId
-    );
-  }, [
-    reviewsData?.reviewsByRestaurant?.reviews,
-    profile?.profile?.email,
-    orderId,
-  ]);
+    return DEFAULT_CENTER;
+  }, [userAddress?.location?.coordinates]);
 
-  // Handlers
-  const onInitDirectionCacheSet = () => {
-    try {
-      const stored_direction = onUseLocalStorage(
-        "get",
-        store_user_location_cache_key
-      );
-      if (stored_direction) {
-        setDirections(JSON.parse(stored_direction));
-      }
-      setIsCheckingCache(false); // done checking
-    } catch (err) {
-      setIsCheckingCache(false);
-    } finally {
-      setIsCheckingCache(false);
+  const stages = useMemo(() => buildStages(destination), [destination]);
+
+  const currentStageIndex = useMemo(() => {
+    const raw = Number(searchParams.get("stage"));
+    if (Number.isFinite(raw) && raw >= 0) {
+      return Math.min(raw, stages.length - 1);
     }
-  };
-
-  // handle submit rating
-  const handleSubmitRating = async (
-    orderId: string | undefined,
-    ratingValue: number,
-    comment?: string,
-    aspects: string[] = []
-  ) => {
-    const reviewDescription = comment?.trim() || undefined;
-    const reviewComments =
-      aspects?.filter(Boolean).join(", ") || undefined;
-
-    // Here you would  call an API to save the rating
-    try {
-      await mutate({
-        variables: {
-          order: orderId,
-          description: reviewDescription,
-          rating: ratingValue,
-          comments: reviewComments,
-        },
-      });
-    } catch (error) {
-      console.error("Error submitting rating:", error);
-    }
-
-    // Close the modal
-    setShowRatingModal(false);
-  };
-
-  //useEffects
-
-  // useEffect to handle order status changes
-  useEffect(() => {
-    if (mergedOrderDetails?.orderStatus == 'PICKED') {
-      setShowChat(true)
-    }
-
-    if (mergedOrderDetails?.orderStatus == "DELIVERED") {
-      // add timer
-      const timer = setTimeout(() => {
-        setShowRatingModal(true);
-      }, 4000); // 4 seconds delay before showing the modal
-      return () => clearTimeout(timer); // Clear timeout on component unmount
-    } else if (mergedOrderDetails?.orderStatus == "ACCEPTED") {
-      setShowConfetti(true);
-
-      // Reset confetti after a longer delay
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 5000);
-    }
-  }, [mergedOrderDetails?.orderStatus]);
-
-  // useEffect to handle subscription data changes
-  useEffect(() => {
-    if (mergedOrderDetails?.restaurant?._id) {
-      refetch();
-    }
-  }, [mergedOrderDetails?.restaurant?._id, isOrderTrackingDetailsLoading]);
-
-  useEffect(() => {
-    onInitDirectionCacheSet();
-  }, [store_user_location_cache_key]);
+    return 1;
+  }, [searchParams, stages.length]);
 
   return (
-    <>
-      {showConfetti && (
-        <>
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              pointerEvents: "none",
-              zIndex: 10000,
-            }}
-          >
-            <ReactConfetti
-              width={window.innerWidth}
-              height={window.innerHeight}
-              recycle={false}
-              numberOfPieces={1000}
-              gravity={0.3}
-            />
-          </div>
-        </>
-      )}
-      <RatingModal
-        visible={showRatingModal && !hasUserReview}
-        onHide={() => setShowRatingModal(false)}
-        order={orderTrackingDetails}
-        onSubmitRating={handleSubmitRating}
-      />
-      <div className="w-screen h-full flex flex-col pb-20 dark:bg-gray-900 dark:text-gray-100">
-        <div className="scrollable-container flex-1">
-          {/* Google Map for Tracking */}
-          <GoogleMapTrackingComponent
-            isLoaded={isLoaded}
-            origin={origin}
-            destination={destination}
-            directions={directions}
-            isCheckingCache={isCheckingCache}
-            directionsCallback={directionsCallback}
-            orderStatus={mergedOrderDetails?.orderStatus || "PENDING"}
-            riderId={mergedOrderDetails?.rider?._id}
-          />
+    <div className="w-screen h-full flex flex-col pb-20 dark:bg-gray-900 dark:text-gray-100">
+      <div className="scrollable-container flex-1">
+        <div className="h-[360px] w-full">
+          {isLoaded ? (
+            <GoogleMap
+              mapContainerStyle={{ width: "100%", height: "100%" }}
+              center={destination}
+              zoom={11}
+              options={{
+                disableDefaultUI: true,
+                zoomControl: true,
+              }}
+            >
+              {stages.map((stage, index) => (
+                <Marker
+                  key={stage.key}
+                  position={stage.position}
+                  label={`${index + 1}`}
+                />
+              ))}
+            </GoogleMap>
+          ) : (
+            <div className="flex h-full items-center justify-center text-gray-500">
+              {GOOGLE_MAPS_KEY
+                ? "Map is loading..."
+                : "Add GOOGLE_MAPS_KEY to enable the map."}
+            </div>
+          )}
+        </div>
 
-          {/* Main Content with increased gap from map */}
-          <div className="mt-8 md:mt-10">
-            <PaddingContainer>
-              {/* Status Card and Help Card in the same row */}
-              <div className="flex flex-col md:flex-row md:items-start items-center justify-between gap-6 mb-8">
-                {/* Order Status Card */}
-                {!isOrderTrackingDetailsLoading && mergedOrderDetails && (
-                  <TrackingStatusCard
-                    orderTrackingDetails={mergedOrderDetails}
-                  />
-                )}
+        <div className="mt-8 md:mt-10">
+          <PaddingContainer>
+            <div className="mb-6">
+              <h1 className="text-xl font-semibold">Order tracking</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Order {orderId}. Stages update as the shipment moves between
+                hubs. No real-time GPS.
+              </p>
+            </div>
 
-                {/* Help Card - positioned on the left */}
-                <div className="md:ml-0 w-full md:w-auto md:flex-none">
-                  <TrackingHelpCard />
-                  {showChat &&
-                    <ChatRider orderId={orderId} customerId={profile?.profile._id} />
-
-                  }
-                </div>
-              </div>
-
-              {/* Order Details - Full width to match status card */}
-              <div className="flex justify-center md:justify-start">
-                {isOrderTrackingDetailsLoading ?
-                  <TrackingOrderDetailsDummy />
-                  : <TrackingOrderDetails
-                    orderTrackingDetails={mergedOrderDetails}
-                  />
-                }
-              </div>
-            </PaddingContainer>
-          </div>
+            <div className="grid gap-3">
+              {stages.map((stage, index) => {
+                const isDone = index < currentStageIndex;
+                const isActive = index === currentStageIndex;
+                return (
+                  <div
+                    key={stage.key}
+                    className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
+                      isActive
+                        ? "border-primary-color bg-primary-color/10"
+                        : "border-gray-200 dark:border-gray-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                          isDone
+                            ? "bg-green-500 text-white"
+                            : isActive
+                              ? "bg-primary-color text-black"
+                              : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <div>
+                        <div className="font-medium">{stage.label}</div>
+                        <div className="text-xs text-gray-500">
+                          {isDone
+                            ? "Completed"
+                            : isActive
+                              ? "In progress"
+                              : "Pending"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {stage.position.lat.toFixed(3)},{stage.position.lng.toFixed(3)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </PaddingContainer>
         </div>
       </div>
-    </>
+    </div>
   );
 }

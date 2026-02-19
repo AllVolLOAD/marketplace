@@ -1,4 +1,14 @@
 export default function getEnv(env: "DEV" | "STAGE" | "PROD") {
+  const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  const wsServerUrl = process.env.NEXT_PUBLIC_WS_SERVER_URL;
+
+  if (serverUrl && wsServerUrl) {
+    return {
+      SERVER_URL: serverUrl,
+      WS_SERVER_URL: wsServerUrl,
+    };
+  }
+
   switch (env) {
     case "DEV":
       return {

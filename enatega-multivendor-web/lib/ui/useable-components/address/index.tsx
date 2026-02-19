@@ -451,7 +451,7 @@ export default function UserAddressComponent(
             <CustomLoader />
           </div>
         ) : (
-          profile?.addresses.map((address, index) => (
+          (profile?.addresses ?? []).map((address, index) => (
             <div
               key={index}
               className="w-full mb-4 flex items-center justify-between"
@@ -719,7 +719,7 @@ export default function UserAddressComponent(
           <button
             className="w-full h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
-              const selectedAddress = profile?.addresses.find(
+              const selectedAddress = profile?.addresses?.find(
                 (address) => address.selected
               );
               if (selectedAddress) {
@@ -916,7 +916,7 @@ export default function UserAddressComponent(
           <button
             className="w-full  h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
-              const selectedAddress = profile?.addresses.find(
+              const selectedAddress = profile?.addresses?.find(
                 (address) => address.selected
               );
               if (selectedAddress) {

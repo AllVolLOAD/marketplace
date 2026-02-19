@@ -1,4 +1,4 @@
-{
+﻿{
   "checking_for_active_orders": "Comprobando pedidos activos",
   "no_active_orders_found": "No se encontraron pedidos activos",
   "active_orders_found": "Pedidos activos encontrados",
@@ -422,7 +422,7 @@
   "please_enter_valid_otp_message": "Por favor ingresa un OTP válido",
   "verify_your_mobile_number_label": "Verifica tu número de teléfono",
   "otp_valid_for_10_minutes_label": "Válido por 10 minutos",
-  "your@email.com": "tu@correo.com",
+  "your_email_com": "tu@correo.com",
   "continue_label": "Continuar",
   "resend_otp_label": "Reenviar OTP",
   "login_label": "Iniciar Sesión",
@@ -661,7 +661,7 @@
   "The_minimum_amount_of_(": "El monto mínimo de (",
   ")_for_your_order_has_not_been_reached": ") para tu pedido no ha sido alcanzado.",
   "missing_address": "Falta Dirección",
-  "Select_your_address.": "Selecciona tu dirección.",
+  "Select_your_address": "Selecciona tu dirección.",
   "DeliveryTime": "Tiempo de Entrega",
   "SalesTax": "Impuesto sobre Ventas",
   "Contact": "Contacto",
@@ -920,3 +920,4 @@
   "loading_orders": "Cargando pedidos",
   "show_more_orders": "Mostrar más pedidos"
 }
+

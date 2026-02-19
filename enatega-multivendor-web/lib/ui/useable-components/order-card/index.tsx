@@ -14,7 +14,6 @@ import OrderItems from "../order-items";
 import { useTranslations } from "next-intl";
 import CustomDialog from "../custom-dialog";
 import useUser from "@/lib/hooks/useUser";
-import { CartItem } from "@/lib/context/User/User.context";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 
 const OrderCard: FC<IOrderCardProps> = ({
@@ -53,7 +52,7 @@ const OrderCard: FC<IOrderCardProps> = ({
     setIsDialogVisible(true);
   }, []);
 
-  function cleanReorderItems(items: any[]): CartItem[] {
+  function cleanReorderItems(items: any[]): any[] {
     return items.map((item) => {
       // Calculate option titles from addons
       const optionTitles: string[] = [];

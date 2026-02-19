@@ -1,11 +1,12 @@
-    "use client";
-    import dynamic from 'next/dynamic';
+"use client";
 
-    const ShopTypeScreen = dynamic(
-    () => import('@/lib/ui/screens/protected/home').then(mod => mod.ShopTypeScreen),
-    { ssr: false }
-    );
+import dynamic from "next/dynamic";
 
-    export default function ShopTypePage() {
-    return <ShopTypeScreen />;
-    }
+const StoreScreen = dynamic(
+  () => import("@/lib/ui/screens/protected/home").then((mod) => mod.StoreScreen),
+  { ssr: false }
+);
+
+export default function ShopTypePage() {
+  return <StoreScreen />;
+}

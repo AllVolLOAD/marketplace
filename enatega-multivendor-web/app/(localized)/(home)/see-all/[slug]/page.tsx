@@ -1,10 +1,12 @@
 "use client";
 
-import { SeeAllScreen } from '@/lib/ui/screens/protected/home'
-import React from 'react'
+import dynamic from "next/dynamic";
 
-function page() {
-  return <SeeAllScreen />
+const StoreScreen = dynamic(
+  () => import("@/lib/ui/screens/protected/home").then((mod) => mod.StoreScreen),
+  { ssr: false }
+);
+
+export default function Page() {
+  return <StoreScreen />;
 }
-
-export default page

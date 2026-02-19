@@ -1,4 +1,4 @@
-{
+﻿{
   "checking_for_active_orders": "Aktif siparişler kontrol ediliyor",
   "no_active_orders_found": "Aktif sipariş bulunamadı",
   "active_orders_found": "Aktif siparişler bulundu",
@@ -422,7 +422,7 @@
   "please_enter_valid_otp_message": "Lütfen geçerli bir OTP girin",
   "verify_your_mobile_number_label": "Telefon numaranızı doğrulayın",
   "otp_valid_for_10_minutes_label": "10 dakika geçerli",
-  "your@email.com": "email@adresiniz.com",
+  "your_email_com": "email@adresiniz.com",
   "continue_label": "Devam Et",
   "resend_otp_label": "OTP'yi Yeniden Gönder",
   "login_label": "Giriş Yap",
@@ -660,7 +660,7 @@
   "The_minimum_amount_of_(": "Siparişiniz için minimum tutar (",
   ")_for_your_order_has_not_been_reached": ") karşılanmadı.",
   "missing_address": "Eksik Adres",
-  "Select_your_address.": "Adresinizi seçin.",
+  "Select_your_address": "Adresinizi seçin.",
   "DeliveryTime": "Teslimat Süresi",
   "SalesTax": "Satış Vergisi",
   "Contact": "İletişim",

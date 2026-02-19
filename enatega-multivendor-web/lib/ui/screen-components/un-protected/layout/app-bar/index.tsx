@@ -5,44 +5,18 @@ import { Sidebar } from "primereact/sidebar";
 import { Menu } from "primereact/menu";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/lib/providers/ThemeProvider";
-import {
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useContext, useEffect, useRef, useState, useTransition } from "react";
 
 // Components
 import Cart from "@/lib/ui/useable-components/cart";
-import UserAddressComponent from "@/lib/ui/useable-components/address";
 import { PaddingContainer } from "@/lib/ui/useable-components/containers";
-import MainSection from "@/lib/ui/useable-components/restaurant-main-section";
-
-// Hook
-import { useUserAddress } from "@/lib/context/address/address.context";
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
-import useLocation from "@/lib/hooks/useLocation";
-import useSetUserCurrentLocation from "@/lib/hooks/useSetUserCurrentLocation";
 import useUser from "@/lib/hooks/useUser";
-import { useSearchUI } from "@/lib/context/search/search.context";
-import useNearByRestaurantsPreview from "@/lib/hooks/useNearByRestaurantsPreview";
 
-import Logo from "@/lib/utils/assets/svg/Logo";
-
-import { AnimatePresence, motion } from "framer-motion";
 
 // Icons
-import {
-  CartSvg,
-  CircleCrossSvg,
-  ClockSvg,
-  LocationSvg,
-  SearchSvg,
-} from "@/lib/utils/assets/svg";
-// import AnimatedLogo from "@/lib/assets/gif/logo.gif";
+import { CartSvg } from "@/lib/utils/assets/svg";
 import { faChevronDown, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -50,19 +24,8 @@ import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 // Interface
 import { IAppBarProps } from "@/lib/utils/interfaces";
 import { ToastContext } from "@/lib/context/global/toast.context";
-// Methods
-import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
-import {
-  deleteSearchedKeywords,
-  getSearchedKeywords,
-} from "@/lib/utils/methods";
-
-// Constnats
-import {
-  languageTypes,
-  USER_CURRENT_LOCATION_LS_KEY,
-} from "@/lib/utils/constants";
-import EmptySearch from "@/lib/ui/useable-components/empty-search-results";
+// Constants
+import { languageTypes } from "@/lib/utils/constants";
 import { useLocale, useTranslations } from "next-intl";
 import { TLocale } from "@/lib/utils/types/locale";
 import { setUserLocale } from "@/lib/utils/methods/locale";
@@ -73,8 +36,6 @@ import CustomButton from "@/lib/ui/useable-components/button";
 const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
   // State for cart sidebar
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isUserAddressModalOpen, setIsUserAddressModalOpen] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
   const [logoutConfirmationVisible, setLogoutConfirmationVisible] =
     useState(false);
   const t = useTranslations();
@@ -97,70 +58,20 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
   }, []);
   // Hooks
   const router = useRouter();
-  const { GOOGLE_MAPS_KEY, CURRENCY_SYMBOL } = useConfig();
-  const {
-    cartCount,
-    calculateSubtotal,
-    profile,
-    loadingProfile,
-    fetchProfile,
-  } = useUser();
-  const { userAddress, setUserAddress } = useUserAddress();
-  const { getCurrentLocation } = useLocation();
-  const { onSetUserLocation } = useSetUserCurrentLocation();
+  const { CURRENCY_SYMBOL } = useConfig();
+  const { cartCount, calculateSubtotal, profile } = useUser();
   const {
     authToken,
     setIsAuthModalVisible,
     setActivePanel,
     setAuthToken,
-    refetchProfileData,
-    setRefetchProfileData,
   } = useAuth();
-  const { queryData = [] } = useNearByRestaurantsPreview(true, 1, 100);
-
-  const {
-    isSearchFocused,
-    setIsSearchFocused,
-    filter,
-    setFilter,
-    setSearchedData,
-    setSearchedKeywords,
-  } = useSearchUI();
 
   // Format subtotal for display
   const formattedSubtotal =
     cartCount > 0
       ? `${CURRENCY_SYMBOL}${calculateSubtotal()}`
       : `${CURRENCY_SYMBOL}0`;
-
-  // Handlers
-  const onInit = () => {
-    const current_location_ls = onUseLocalStorage(
-      "get",
-      USER_CURRENT_LOCATION_LS_KEY
-    );
-    const user_current_location = current_location_ls
-      ? JSON.parse(current_location_ls)
-      : null;
-
-    if (user_current_location) {
-      setUserAddress(user_current_location);
-      return;
-    }
-
-    const selectedAddress = profile?.addresses.find(
-      (address) => address.selected
-    );
-    // ✅ If there's a selected address, use that
-    if (selectedAddress) {
-      setUserAddress(selectedAddress);
-    } else {
-      // Otherwise, get current location if profile is loaded and maps key exists
-      if (!loadingProfile && GOOGLE_MAPS_KEY) {
-        getCurrentLocation(onSetUserLocation);
-      }
-    }
-  };
 
   //Locale Configuration
   function onLocaleChange(value: string) {
@@ -169,24 +80,6 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
       setUserLocale(locale);
     });
   }
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
-    if (!token || !userId) {
-      setIsLogin(false);
-    } else {
-      setIsLogin(true);
-    }
-  }, []);
-
-  const onHandleAddressModelVisibility = () => {
-    if (authToken) {
-      setIsUserAddressModalOpen(true);
-    } else {
-      setIsAuthModalVisible(true);
-    }
-  };
 
   const { showToast } = useContext(ToastContext);
   const onLogout = () => {
@@ -204,13 +97,8 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
     setLogoutConfirmationVisible(false);
   };
 
-  // Logo click handler
   const logoClickHandler = () => {
-    if (isLogin) {
-      router.push("/");
-    } else {
-      router.push("/");
-    }
+    router.push("/");
   };
 
   //Language DropDoDowm
@@ -226,133 +114,6 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
   //   });
   // };
 
-  // UseEffects
-  useEffect(() => {
-    onInit();
-  }, [GOOGLE_MAPS_KEY, profile]);
-
-  useEffect(() => {
-    if (refetchProfileData) {
-      fetchProfile(); // this one is not working when a refetch is required, kindly check this whoever is working on this module
-      onInit();
-      setRefetchProfileData(false);
-    }
-  }, [refetchProfileData]);
-
-  // filters search results
-  let searchedKeywords = getSearchedKeywords();
-
-  const filteredResults = useMemo(() => {
-    if (!filter.trim()) return [];
-    if (!queryData || !Array.isArray(queryData) || queryData.length === 0)
-      return [];
-
-    const searchText = filter.toLowerCase();
-    return queryData.filter(({ name, address = "", cuisines = [] }) => {
-      return (
-        name.toLowerCase().includes(searchText) ||
-        address.toLowerCase().includes(searchText) ||
-        cuisines.join(" ").toLowerCase().includes(searchText)
-      );
-    });
-  }, [filter, queryData]);
-
-  //Language Dropdown UseEffect
-  useEffect(() => {
-    const closeDropdown = () => {
-      // setShowLanguageDropdown(false);
-    };
-    window.addEventListener("click", closeDropdown);
-    return () => window.removeEventListener("click", closeDropdown);
-  }, []);
-
-  // Update searchedData in context whenever filter changes
-  useEffect(() => {
-    setSearchedData(filteredResults);
-  }, [filter]);
-
-  // Handle search input change
-  const handleSearchInputChange = (e) => {
-    setFilter(e.target.value);
-  };
-
-  // Search results rendered
-  const renderSearchResults = () => {
-    // Case 1: Input is empty
-    if (filter.length < 1) {
-      // Subcase: No search history
-      if (searchedKeywords.length === 0) {
-        return (
-          <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-            {t("start_typing_to_search_for_restaurants_or_stores")}
-          </div>
-        );
-      }
-
-      // Subcase: Display recent history
-      return (
-        <div className="p-3">
-          <div className="flex flex-row justify-between">
-            <span className="text-sm font-normal mb-2 text-gray-500 dark:text-gray-400">
-              {t("you_recently_searched")}
-            </span>
-            <span
-              className="text-sm font-normal mb-2 text-secondary-color hover:cursor-pointer dark:text-primary-color"
-              onClick={() => {
-                deleteSearchedKeywords();
-                setSearchedKeywords([]);
-              }}
-            >
-              {t("clear_history_btn")}
-            </span>
-          </div>
-          <div className="flex flex-col gap-2">
-            {searchedKeywords.map((keyword, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-1 p-1 hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
-                onClick={() => setFilter(keyword)}
-              >
-                <ClockSvg width={18} height={18} color="gray" />
-                <span className="text-base dark:text-white">{keyword}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Case 2: User searched something
-    if (filteredResults.length > 0) {
-      return (
-        <MainSection
-          title={`${t("restaurant_and_stores_title")}: ${filter}`}
-          data={filteredResults.slice(0, 3)}
-          loading={false}
-          error={false}
-          search={true}
-        />
-      );
-    }
-
-    // Case 3: No results found for the searched keyword
-    return (
-      <div className="text-center py-6 text-gray-500 dark:text-gray-400 flex flex-col items-center justify-center">
-        <EmptySearch />
-      </div>
-    );
-  };
-
-  function fittedAddress(address: String | undefined) {
-    if (address) {
-      let adr = address.slice(0, 16);
-      if (address.length > 16) {
-        adr = adr + "...";
-      }
-      return adr;
-    }
-    return "";
-  }
 
   // Language Modal
   const model = languageTypes.map((lang) => ({
@@ -375,89 +136,24 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
   return (
     <>
       <nav
-        className={`w-screen shadow-sm dark:shadow-gray-600 z-50 bg-white dark:bg-gray-900 layout-top-bar ${isSearchFocused ? "sticky top-0" : ""}`}
+        className="w-screen shadow-sm dark:shadow-gray-600 z-50 bg-white dark:bg-gray-900 layout-top-bar"
       >
         <div className="w-full">
           <PaddingContainer>
             <div className="flex items-center justify-between w-full h-20 sm:h-16 flex-wrap md:flex-nowrap">
               {/* Left Section */}
               <div className="flex items-center gap-2 flex-shrink-0 cursor-pointer">
-                {!isSearchFocused && (
-                  <div
-                    onClick={logoClickHandler}
-                    className="text-xl font-bold text-gray-900 dark:text-white"
-                  >
-                    <Logo fillColor="#000000" darkmode="#FFFFFFFF" />
-                  </div>
-                )}
-                {!isSearchFocused && (
-                  <div
-                    className={`flex items-center ${isSearchFocused && "hidden"} hidden lg:flex`}
-                    onClick={onHandleAddressModelVisibility}
-                  >
-                    {/* Show on large screens only */}
-                    <div className="hidden md:block p-[4px] m-2 rounded-full">
-                      <LocationSvg width={22} height={22} />
-                    </div>
-
-                    <span className="hidden md:inline text-xs sm:text-sm md:text-base text-primary-color font-inter font-normal leading-6 tracking-normal mr-2 truncate">
-                      {fittedAddress(userAddress?.deliveryAddress)}
-                    </span>
-
-                    <div className="hidden sm:flex items-center">
-                      <FontAwesomeIcon
-                        icon={faChevronDown}
-                        width={12}
-                        hanging={12}
-                        className="text-primary-color"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Center Section */}
-              <div
-                className={`flex-grow transition-all duration-500 ease-in-out ${isSearchFocused ? "max-w-full" : "max-w-md"} px-2`}
-              >
-                <div className="relative w-[14rem] sm:w-full">
-                  <input
-                    id="search-input"
-                    value={filter}
-                    onChange={handleSearchInputChange}
-                    onFocus={() => setIsSearchFocused(true)}
-                    placeholder={t("SearchBarPlaceholder")}
-                    className={`
-                w-full px-4 py-2 pr-10 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-secondary-color
-                ${!isSearchFocused ? "hidden" : "block"} sm:block
-                dark:bg-gray-800 dark:text-white
-              `}
-                  />
-
-                  {isSearchFocused && (
-                    <div
-                      className="absolute top-1/2 right-3 transform -translate-y-1/2 bg-gray-100 dark:bg-gray-700 rounded-full w-6 h-6 items-center justify-center cursor-pointer hidden sm:flex"
-                      onClick={() => setFilter("")}
-                    >
-                      <CircleCrossSvg color="black" width={16} height={16} />
-                    </div>
-                  )}
+                <div
+                  onClick={logoClickHandler}
+                  className="text-xl font-bold text-gray-900 dark:text-white"
+                >
+                  <span className="text-xl font-bold tracking-tight">IT-SHORT</span>
                 </div>
               </div>
 
               {/* Right Section */}
               <div className="flex items-center justify-end gap-2 flex-shrink-0">
-                {!isSearchFocused && (
-                  <div className="sm:hidden flex justify-end items-center w-full">
-                    <div
-                      className="w-7 h-7 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center cursor-pointer"
-                      onClick={() => setIsSearchFocused(true)}
-                    >
-                      <SearchSvg width={16} height={16} />
-                    </div>
-                  </div>
-                )}
-                {!authToken && !isSearchFocused ? (
+                {!authToken ? (
                   <button
                     className="w-auto min-w-[64px] h-fit py-2 md:py-3 px-4 bg-primary-color rounded text-sm lg:text-[16px] md:text-md flex items-center justify-center"
                     onClick={handleModalToggle}
@@ -468,7 +164,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                   </button>
                 ) : (
                   <div
-                    className={`flex items-center space-x-2 rounded-md p-2 hover:bg-[#d8d8d837] ${isSearchFocused && "hidden"}`}
+                    className="flex items-center space-x-2 rounded-md p-2 hover:bg-[#d8d8d837]"
                     onClick={(event) => menuRef.current?.toggle(event)}
                     aria-controls="popup_menu_right"
                     aria-haspopup
@@ -515,19 +211,6 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                           },
                         },
                         {
-                          label: t("ProfileSection.gethelp"),
-                          template(item) {
-                            return (
-                              <div
-                                className="text-gray-500 hover:bg-gray-300  dark:text-white dark:hover:bg-gray-600 p-2  cursor-pointer"
-                                onClick={() => router.push("/profile/getHelp")}
-                              >
-                                {item.label}
-                              </div>
-                            );
-                          },
-                        },
-                        {
                           label: t("ProfileSection.logout_appbar"),
                           template(item) {
                             return (
@@ -551,49 +234,43 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                   </div>
                 )}
                 {/* Language Dropdown */}{" "}
-                {!isSearchFocused && (
+                <div className="relative flex items-center gap-x-2" title="Languages">
                   <div
-                    className="relative flex items-center gap-x-2"
-                    title="Languages"
+                    onClick={toggleTheme}
+                    className="cursor-pointer p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                   >
-                    <div
-                      onClick={toggleTheme}
-                      className="cursor-pointer p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                    >
-                      {theme === "dark" ? "🌙" : "☀️"}
-                    </div>{" "}
-                    <button
-                      onClick={(e) => languageMenuRef.current?.toggle(e)}
-                      className="flex items-center justify-center"
-                    >
-                      {" "}
-                      <FontAwesomeIcon
-                        icon={faGlobe}
-                        width={24}
-                        height={24}
-                        className="text-gray-700 dark:text-gray-400"
-                      />{" "}
-                    </button>{" "}
-                    <Menu
-                      // className="dark:bg-gray-800 dark:text-white mt-5"
-                      model={model}
-                      popup
-                      ref={languageMenuRef}
-                      id="language_menu_popup"
-                      popupAlignment="left"
-                      className="
+                    {theme === "dark" ? "🌙" : "☀️"}
+                  </div>{" "}
+                  <button
+                    onClick={(e) => languageMenuRef.current?.toggle(e)}
+                    className="flex items-center justify-center"
+                  >
+                    {" "}
+                    <FontAwesomeIcon
+                      icon={faGlobe}
+                      width={24}
+                      height={24}
+                      className="text-gray-700 dark:text-gray-400"
+                    />{" "}
+                  </button>{" "}
+                  <Menu
+                    model={model}
+                    popup
+                    ref={languageMenuRef}
+                    id="language_menu_popup"
+                    popupAlignment="left"
+                    className="
                       dark:bg-gray-800 dark:text-white mt-5
         [&_.p-menu-list]:max-h-72 
         [&_.p-menu-list]:overflow-y-auto
         [&_.p-menu-list]:scrollbar-thin
         shadow-lg
       "
-                    />
-                  </div>
-                )}
+                  />
+                </div>
                 {/* Cart Button */}
                 <div className="p-1 cursor-pointer">
-                  {cartCount > 0 && !isSearchFocused && (
+                  {cartCount > 0 && (
                     <div
                       className="hidden lg:flex items-center justify-between bg-primary-color rounded-lg px-4 py-3 w-64 cursor-pointer"
                       onClick={() => {
@@ -617,96 +294,34 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                       </span>
                     </div>
                   )}
-                  {isSearchFocused ? (
-                    <div
-                      className="flex items-center justify-center rounded-full w-10 h-10 bg-gray-100 dark:bg-gray-700 relative cursor-pointer"
-                      onClick={() => {
-                        setIsSearchFocused(false);
-                        setFilter("");
-                      }}
-                    >
-                      <CircleCrossSvg color="black" width={24} height={24} />
+                  <div
+                    className={`${cartCount > 0 ? "lg:hidden" : ""} flex items-center justify-center rounded-full w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-500 relative`}
+                    onClick={() => {
+                      if (!authToken) {
+                        setIsAuthModalVisible(true);
+                      } else {
+                        setIsCartOpen(true);
+                      }
+                    }}
+                  >
+                    <div className="block sm:hidden">
+                      <CartSvg color="black" width={18} height={18} />
                     </div>
-                  ) : (
-                    <div
-                      className={`${cartCount > 0 ? "lg:hidden" : ""} flex items-center justify-center rounded-full w-8 h-8 md:w-10 md:h-10 bg-gray-100 dark:bg-gray-500 relative`}
-                      onClick={() => setIsCartOpen(true)}
-                    >
-                      <div className="block sm:hidden">
-                        <CartSvg color="black" width={18} height={18} />
-                      </div>
-                      <div className="hidden sm:block">
-                        <CartSvg color="black" width={22} height={22} />
-                      </div>
-                      {cartCount > 0 && authToken && (
-                        <div className="absolute -top-1 -right-1 bg-black text-primary-color text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
-                          {cartCount}
-                        </div>
-                      )}
+                    <div className="hidden sm:block">
+                      <CartSvg color="black" width={22} height={22} />
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Search Results */}
-            <div className="flex items-center justify-center">
-              <div className="w-full md:w-7/12 pr-5">
-                <AnimatePresence>
-                  {isSearchFocused && (
-                    <motion.div
-                      key="search-results"
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="
-                      w-full h-[10%] mt-2 max-h-[60vh] 
-                      bg-white dark:bg-gray-800 
-                      overflow-y-auto 
-                      scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100
-                      dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-700
-                      rounded-md
-                    "
-                    >
-                      {renderSearchResults()}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {!isSearchFocused && (
-              <div
-                className="my-2 lg:hidden"
-                onClick={onHandleAddressModelVisibility}
-              >
-                <div className="flex gap-4">
-                  <LocationSvg width={22} height={22} />
-                  <p className="text-[14px] text-primary-color">
-                    {userAddress?.deliveryAddress}
-                  </p>
-                  <div className="sm:flex items-center">
-                    <FontAwesomeIcon
-                      icon={faChevronDown}
-                      width={12}
-                      hanging={12}
-                      color="#94e469"
-                    />
+                    {cartCount > 0 && authToken && (
+                      <div className="absolute -top-1 -right-1 bg-black text-primary-color text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                        {cartCount}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </PaddingContainer>
         </div>
       </nav>
-      {/* Preventing everything at the background from being clickable when searchbar is open  */}
-      {isSearchFocused && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsSearchFocused(false)}
-        />
-      )}
 
       {/* Cart Sidebar */}
       <Sidebar
@@ -773,11 +388,6 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
           </div>
         </div>
       </Dialog>
-
-      <UserAddressComponent
-        visible={isUserAddressModalOpen}
-        onHide={() => setIsUserAddressModalOpen(false)}
-      />
     </>
   );
 };

@@ -1,9 +1,10 @@
 "use client";
-import CustomerTicketsMain from "@/lib/ui/screen-components/protected/profile/customer-tickets";
 export default function CustomerTicketsScreen() {
   return (
     <div className="flex flex-col space-y-10 my-10">
-      <CustomerTicketsMain />
+      <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+        Support tickets are not included in this apparel MVP.
+      </div>
     </div>
   );
 }

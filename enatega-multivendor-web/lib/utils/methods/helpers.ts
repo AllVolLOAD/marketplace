@@ -1,9 +1,5 @@
-import {
-  PAYPAL_ALLOWED_CURRENCIES,
-  STRIPE_ALLOWED_CURRENCIES,
-} from "../constants/currencies";
+import { STRIPE_ALLOWED_CURRENCIES } from "../constants/currencies";
 import { OrderStatus } from "../interfaces";
-import emailjs from "emailjs-com";
 import { onUseLocalStorage } from "./local-storage";
 
 export function formatDate(dateString?: string): string {
@@ -154,9 +150,6 @@ export function checkPaymentMethod(currency: string, paymentMethod: string) {
   if (paymentMethod === "STRIPE") {
     return STRIPE_ALLOWED_CURRENCIES.find((val) => val.currency === currency);
   }
-  if (paymentMethod === "PAYPAL") {
-    return PAYPAL_ALLOWED_CURRENCIES.find((val) => val.currency === currency);
-  }
   return true;
 }
 // Format time from [hours, minutes] to HH:MM format
@@ -210,15 +203,6 @@ export const getDistanceFromLatLonInKm = (
 }
 
 
-
-export const sendEmail = (templateId : any, templateParams : any) => {
-  return emailjs.send(
-    "service_463sz1v",
-    templateId,
-    templateParams,
-    "kfOnsw1Kn8ZWu4l77"
-  );
-};
 
 const LOCAL_STORAGE_KEY = "searchedKeywords";
 

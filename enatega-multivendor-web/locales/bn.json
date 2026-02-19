@@ -1,4 +1,4 @@
-{
+﻿{
   "checking_for_active_orders": "সক্রিয় অর্ডার চেক করা হচ্ছে",
   "no_active_orders_found": "কোনো সক্রিয় অর্ডার পাওয়া যায়নি",
   "active_orders_found": "সক্রিয় অর্ডার পাওয়া গেছে",
@@ -422,7 +422,7 @@
   "please_enter_valid_otp_message": "দয়া করে একটি বৈধ OTP দিন",
   "verify_your_mobile_number_label": "আপনার ফোন নম্বর যাচাই করুন",
   "otp_valid_for_10_minutes_label": "১০ মিনিটের জন্য বৈধ",
-  "your@email.com": "your@email.com",
+  "your_email_com": "your_email_com",
   "continue_label": "চালিয়ে যান",
   "resend_otp_label": "OTP পুনরায় পাঠান",
   "login_label": "লগইন",
@@ -660,7 +660,7 @@
   "The_minimum_amount_of_(": "সর্বনিম্ন পরিমাণ (",
   ")_for_your_order_has_not_been_reached": ") আপনার অর্ডারের জন্য পৌঁছায়নি।",
   "missing_address": "ঠিকানা অনুপস্থিত",
-  "Select_your_address.": "আপনার ঠিকানা নির্বাচন করুন।",
+  "Select_your_address": "আপনার ঠিকানা নির্বাচন করুন।",
   "DeliveryTime": "ডেলিভারি সময়",
   "SalesTax": "বিক্রয় কর",
   "Contact": "যোগাযোগ",

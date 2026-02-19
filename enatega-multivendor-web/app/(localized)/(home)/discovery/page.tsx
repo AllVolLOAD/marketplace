@@ -1,12 +1,11 @@
 "use client";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-const DiscoveryScreen = dynamic(
-  () => import('@/lib/ui/screens/protected/home').then(mod => mod.DiscoveryScreen),
+const StoreScreen = dynamic(
+  () => import("@/lib/ui/screens/protected/home").then((mod) => mod.StoreScreen),
   { ssr: false }
-);  
-
+);
 
 export default function DisocveryPage() {
-  return <DiscoveryScreen />;
+  return <StoreScreen />;
 }
