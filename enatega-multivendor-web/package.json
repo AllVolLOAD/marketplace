@@ -43,7 +43,7 @@
     "react-international-phone": "^4.3.0",
     "react-phone-input-2": "^2.15.1",
     "react-tooltip": "^5.28.1",
-    "sharp": "^0.34.1",
+    "sharp": "^0.34.5",
     "tailwind-merge": "^2.5.2",
     "tailwind-scrollbar": "^2.0.0",
     "uuid": "^11.1.0",
